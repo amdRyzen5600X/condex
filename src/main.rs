@@ -27,10 +27,7 @@ fn app(terminal: &mut DefaultTerminal) -> std::io::Result<()> {
     let mut body_state = BodyState::new(row_count);
     let mut input_state = InputBoxState::new();
 
-    let llm = LLM::new(
-        "-".to_owned(),
-        "glm-4.7-flash".to_owned(),
-    );
+    let llm = LLM::new("-".to_owned(), "glm-4.7-flash".to_owned());
 
     let system_prompt = fs::read_to_string("prompts/system.txt")
         .unwrap_or_else(|_| "You are a helpful assistant.".to_string());

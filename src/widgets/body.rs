@@ -123,8 +123,6 @@ impl StatefulWidget for Body {
             msg.render(*area, buf);
         }
 
-        // text.render(inner, buf);
-
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
             .begin_symbol(Some("↑"))
             .end_symbol(Some("↓"))

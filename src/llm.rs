@@ -7,7 +7,7 @@ mod integration_tests;
 #[cfg(test)]
 mod async_tests;
 
-pub use client::{AsyncConversation, AsyncResult, Conversation, LLMError, LLM};
+pub use client::{AsyncConversation, AsyncResult, Conversation, LLM, LLMError};
 pub use types::{
     ChatCompletionMessage, ChatCompletionRequest, ChatCompletionResponse, Choice, ErrorResponse,
     Function, MediaUrl, Message, MessageContent, MultimodalContentItem, PromptTokensDetails,

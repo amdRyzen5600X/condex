@@ -3,7 +3,7 @@ use std::thread;
 use std::time::Duration;
 
 use crate::llm::types::Message;
-use crate::llm::{AsyncConversation, Conversation, Role, LLM};
+use crate::llm::{AsyncConversation, Conversation, LLM, Role};
 
 #[test]
 fn test_non_blocking_behavior() {

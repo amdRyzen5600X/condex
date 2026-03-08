@@ -25,11 +25,13 @@ impl EventReader {
         let (tx, rx) = mpsc::channel();
 
         let tx_clone = tx.clone();
-        thread::spawn(move || loop {
-            if let Ok(crossterm_event) = event::read() {
-                let app_event = Event::Input(crossterm_event);
-                if tx_clone.send(app_event).is_err() {
-                    break;
+        thread::spawn(move || {
+            loop {
+                if let Ok(crossterm_event) = event::read() {
+                    let app_event = Event::Input(crossterm_event);
+                    if tx_clone.send(app_event).is_err() {
+                        break;
+                    }
                 }
             }
         });
@@ -41,11 +43,13 @@ impl EventReader {
         let (tx, rx) = mpsc::channel();
 
         let tx_clone = tx.clone();
-        thread::spawn(move || loop {
-            if let Ok(crossterm_event) = event::read() {
-                let app_event = Event::Input(crossterm_event);
-                if tx_clone.send(app_event).is_err() {
-                    break;
+        thread::spawn(move || {
+            loop {
+                if let Ok(crossterm_event) = event::read() {
+                    let app_event = Event::Input(crossterm_event);
+                    if tx_clone.send(app_event).is_err() {
+                        break;
+                    }
                 }
             }
         });
@@ -121,7 +125,7 @@ impl EventReader {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::llm::{ChatCompletionResponse, Conversation, Role, LLM};
+    use crate::llm::{ChatCompletionResponse, Conversation, LLM, Role};
 
     #[test]
     fn test_event_creation() {
