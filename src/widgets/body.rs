@@ -1,23 +1,40 @@
 use ratatui::{
-    layout::Rect,
-    text::Text,
+    layout::{self, Constraint, Rect},
+    text::{Line, Span},
     widgets::{
         Block, Scrollbar, ScrollbarOrientation, ScrollbarState, StatefulWidget, Widget as _,
     },
 };
 
-pub struct Body {
-    pub history: String,
+use crate::llm::{Message, MessageContent};
+use crate::widgets;
+
+fn extract_content(content: &MessageContent) -> String {
+    match content {
+        MessageContent::Text(s) => s.clone(),
+        MessageContent::Multimodal(items) => items
+            .iter()
+            .filter_map(|item| match item {
+                crate::llm::MultimodalContentItem::Text { text } => Some(text.clone()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join(" "),
+    }
 }
 
+pub struct Body {}
+
 impl Body {
-    pub fn new(content: String) -> Self {
-        Self { history: content }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
 pub struct BodyState {
+    pub history: Vec<Message>,
     pub is_modifying: bool,
+    pub is_loading: bool,
     pub scrollbar_state: ScrollbarState,
 }
 
@@ -28,6 +45,8 @@ impl BodyState {
         scrollbar_state.last();
         Self {
             is_modifying: false,
+            is_loading: false,
+            history: Vec::new(),
             scrollbar_state,
         }
     }
@@ -46,7 +65,32 @@ impl StatefulWidget for Body {
         let inner = block.inner(area);
         block.render(area, buf);
 
-        let lines: Vec<&str> = self.history.lines().collect();
+        let mut lines: Vec<widgets::Message> = state
+            .history
+            .iter()
+            .map(|msg| widgets::Message::new(msg.role, extract_content(&msg.content)))
+            .collect();
+
+        if state.is_loading {
+            let loading_indicator = Line::from(vec![
+                Span::raw(""),
+                Span::styled(
+                    "●",
+                    ratatui::style::Style::default().fg(ratatui::style::Color::Yellow),
+                ),
+                Span::raw(" "),
+                Span::styled(
+                    "Thinking...",
+                    ratatui::style::Style::default().fg(ratatui::style::Color::Gray),
+                ),
+            ]);
+            let loading_text = loading_indicator.to_string();
+            lines.push(widgets::Message::new(
+                crate::llm::Role::Assistant,
+                loading_text,
+            ));
+        }
+
         let total_lines = lines.len();
         let viewport_height = inner.height as usize;
         let max_scroll = total_lines.saturating_sub(viewport_height);
@@ -62,8 +106,24 @@ impl StatefulWidget for Body {
         let lines_to_show = viewport_height.min(total_lines);
         let start_line = max_scroll.saturating_sub(current_position);
 
-        let text = Text::from_iter(lines.into_iter().rev().skip(start_line).take(lines_to_show).rev());
-        text.render(inner, buf);
+        lines = lines
+            .into_iter()
+            .rev()
+            .skip(start_line)
+            .take(lines_to_show)
+            .rev()
+            .collect();
+        let layout =
+            layout::Layout::vertical(lines.iter().map(|line| {
+                Constraint::Length(line.content.lines().collect::<Vec<_>>().len() as u16)
+            }))
+            .flex(layout::Flex::End)
+            .split(inner);
+        for (area, msg) in layout.iter().zip(lines) {
+            msg.render(*area, buf);
+        }
+
+        // text.render(inner, buf);
 
         let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
             .begin_symbol(Some("↑"))
